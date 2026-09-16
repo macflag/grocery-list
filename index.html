@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Groceries">
+<meta name="theme-color" content="#0a1929">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Groceries</title>
+<style>
+  :root {
+    --bg: #0a1929;
+    --surface: #10263f;
+    --surface-2: #163150;
+    --line: #1f3d60;
+    --blue: #005a9c;
+    --blue-lit: #2b8ae0;
+    --red: #ef3e42;
+    --text: #eaf2fb;
+    --muted: #8ea8c3;
+    --radius: 12px;
+    --tabbar: 64px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.35;
+    touch-action: manipulation;
+    padding-bottom: calc(var(--tabbar) + env(safe-area-inset-bottom) + 16px);
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--blue-lit); outline-offset: 2px; }
+  button:disabled { opacity: .3; cursor: default; }
+
+  header {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg);
+    padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .titles { flex: 1; min-width: 0; }
+  h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .subtitle { color: var(--muted); font-size: 14px; }
+  .hbtn {
+    min-height: 40px; padding: 0 14px; border-radius: 20px;
+    background: var(--surface-2); font-size: 15px; font-weight: 600;
+  }
+  .hbtn.on { background: var(--blue); }
+  .hbtn.dots { width: 40px; padding: 0; font-size: 22px; line-height: 1; }
+
+  main { padding: 8px 12px 0; max-width: 640px; margin: 0 auto; }
+  .store { margin-top: 14px; }
+  .store h2 {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 0 4px 8px; font-size: 19px; font-weight: 700;
+  }
+  .store h2 .sub { font-size: 14px; font-weight: 500; color: var(--muted); }
+  .list { list-style: none; margin: 0; padding: 0; background: var(--surface); border-radius: var(--radius); overflow: hidden; }
+  .list li + li { border-top: 1px solid var(--line); }
+
+  /* Items page */
+  .row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 8px 6px 14px; }
+  .row .name { flex: 1; min-width: 0; }
+  .row.need { background: linear-gradient(90deg, rgba(239,62,66,.16), rgba(239,62,66,0) 70%); box-shadow: inset 4px 0 0 var(--red); }
+  .row.need .name { font-weight: 600; }
+  .stepper { display: flex; align-items: center; gap: 4px; }
+  .stepper button {
+    width: 44px; height: 44px; border-radius: 22px;
+    background: var(--blue); font-size: 24px; font-weight: 500; line-height: 1;
+  }
+  .qty { min-width: 38px; text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; }
+  .row.need .qty { color: var(--red); font-size: 19px; }
+  .order { display: flex; flex-direction: column; gap: 2px; }
+  .order button { width: 36px; height: 24px; border-radius: 6px; background: var(--surface-2); font-size: 12px; }
+  .ebtn { min-height: 40px; padding: 0 12px; border-radius: 8px; background: var(--surface-2); font-size: 15px; }
+  .ebtn.danger { color: #ff8a8d; }
+  .add {
+    width: 100%; margin-top: 8px; min-height: 48px; border-radius: var(--radius);
+    border: 1px dashed var(--line); color: var(--blue-lit); font-weight: 600;
+  }
+
+  /* Shopping pages */
+  .shop {
+    width: 100%; display: flex; align-items: center; gap: 14px;
+    min-height: 64px; padding: 8px 16px; text-align: left;
+  }
+  .shop:active { background: var(--surface-2); }
+  .shop .qty {
+    min-width: 48px; height: 36px; line-height: 36px; border-radius: 18px;
+    background: var(--red); color: #fff; font-size: 17px;
+  }
+  .shop .name { flex: 1; font-size: 19px; font-weight: 600; }
+  .shop .tick {
+    width: 30px; height: 30px; border-radius: 15px; border: 2px solid var(--muted);
+  }
+  .empty { text-align: center; color: var(--muted); padding: 56px 20px; }
+  .empty p { margin: 0 0 16px; font-size: 19px; color: var(--text); }
+  .empty button { min-height: 44px; padding: 0 18px; border-radius: 22px; background: var(--blue); font-weight: 600; color: var(--text); }
+  .hint { color: var(--muted); font-size: 14px; text-align: center; margin: 14px 0 0; }
+
+  /* Tab bar */
+  nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+    display: flex; background: var(--surface); border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav button {
+    flex: 1; min-height: var(--tabbar); padding: 6px 4px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    color: var(--muted); font-size: 12px; font-weight: 600; line-height: 1.15; text-align: center;
+  }
+  nav button.active { color: var(--text); box-shadow: inset 0 3px 0 var(--blue-lit); }
+  .badge {
+    min-width: 26px; height: 22px; padding: 0 7px; border-radius: 11px;
+    background: var(--surface-2); color: var(--muted); font-size: 13px; line-height: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+  .badge.hot { background: var(--red); color: #fff; }
+  .badge.plain { background: transparent; font-size: 17px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 12px; right: 12px; z-index: 7;
+    bottom: calc(var(--tabbar) + env(safe-area-inset-bottom) + 12px);
+    max-width: 616px; margin: 0 auto;
+    display: flex; align-items: center; gap: 12px;
+    background: #eaf2fb; color: #0a1929; border-radius: var(--radius);
+    padding: 10px 10px 10px 16px; font-weight: 600;
+    transform: translateY(20px); opacity: 0; pointer-events: none;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+  .toast.show { transform: none; opacity: 1; pointer-events: auto; }
+  .toast span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .toast button { min-height: 40px; padding: 0 16px; border-radius: 20px; background: var(--blue); color: #fff; font-weight: 700; }
+  .toast button[hidden] { display: none; }
+
+  /* Dialogs */
+  dialog {
+    width: min(92vw, 520px); border: 0; border-radius: 16px; padding: 18px;
+    background: var(--surface); color: var(--text);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  dialog h3 { margin: 0 0 6px; font-size: 20px; }
+  dialog p { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+  .menu button {
+    display: block; width: 100%; text-align: left; min-height: 52px; padding: 0 14px;
+    border-radius: 10px; background: var(--surface-2); margin-top: 8px; font-weight: 600;
+  }
+  .menu button.danger { color: #ff8a8d; }
+  .menu button.quiet { background: none; text-align: center; color: var(--muted); }
+  textarea {
+    width: 100%; height: 45vh; resize: vertical;
+    background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px; font: 16px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .drow { display: flex; gap: 8px; margin-top: 12px; }
+  .drow button { flex: 1; min-height: 48px; border-radius: 10px; background: var(--surface-2); font-weight: 600; }
+  .drow button.primary { background: var(--blue); }
+
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titles">
+    <h1 id="title">Groceries</h1>
+    <div class="subtitle" id="subtitle"></div>
+  </div>
+  <button class="hbtn" id="editBtn" type="button">Edit</button>
+  <button class="hbtn dots" id="menuBtn" type="button" aria-label="Menu">⋯</button>
+</header>
+
+<main id="main"></main>
+
+<nav id="tabs" aria-label="Pages"></nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span id="toastMsg"></span>
+  <button id="toastUndo" type="button">Undo</button>
+</div>
+
+<dialog id="menu">
+  <div class="menu">
+    <h3>List</h3>
+    <button type="button" data-menu="copy">Copy list as text</button>
+    <button type="button" data-menu="import">Replace list from text</button>
+    <button type="button" data-menu="reset" class="danger">Set every item to x0</button>
+    <button type="button" data-menu="close" class="quiet">Close</button>
+  </div>
+</dialog>
+
+<dialog id="textDlg">
+  <h3 id="textTitle"></h3>
+  <p id="textHelp"></p>
+  <textarea id="textArea" spellcheck="false" autocapitalize="off"></textarea>
+  <div class="drow">
+    <button type="button" id="textCancel">Cancel</button>
+    <button type="button" id="textOk" class="primary"></button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'groceries-v1';
+
+  var SEED = [
+    { name: 'Publix/Whole Foods', items: [
+      ['Lime', 0], ['Banana', 3], ['Tart cherry', 0],
+      ['Distilled Water', 2], ['Water bottle', 0],
+      ['Cleaner', 0], ['Cleaning vinegar', 0], ['Trash bags', 0],
+      ['Milk', 1], ['Fage 0%', 0],
+      ['English muffin', 0], ['Apple Jam', 0], ['Blueberry jam', 0],
+      ['Ice', 0]
+    ]},
+    { name: 'Costco', items: [
+      ['Spinach', 2], ['Carrots', 1],
+      ['Chicken', 1],
+      ['Milk', 0], ['Butter', 0],
+      ['Honey', 0], ['Maple syrup', 0],
+      ['Dawn', 0], ['Tide', 0], ['Paper towels', 0], ['Toilet Paper', 0], ['Bounce', 0], ['Lysol', 0],
+      ['Veggies', 0], ['Strawberries', 0], ['Berries', 0], ['Salmon', 0], ['Mahi', 0],
+      ['Rice', 0],
+      ['Listerine', 0]
+    ]}
+  ];
+
+  function $(s) { return document.querySelector(s); }
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function seed() {
+    return { stores: SEED.map(function (s) {
+      return { id: uid(), name: s.name, items: s.items.map(function (p) {
+        return { id: uid(), name: p[0], qty: p[1] };
+      })};
+    })};
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && Array.isArray(d.stores)) return d;
+      }
+    } catch (e) {}
+    return seed();
+  }
+
+  var state = load();
+  var tab = 'items';
+  var editing = false;
+  var undoFn = null;
+  var toastTimer = null;
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { showToast('Could not save on this device', null); }
+  }
+
+  function needed(items) { return items.filter(function (i) { return i.qty > 0; }); }
+  function totalNeeded() {
+    return state.stores.reduce(function (n, s) { return n + needed(s.items).length; }, 0);
+  }
+  function findStore(id) { return state.stores.filter(function (s) { return s.id === id; })[0]; }
+  function countText(n) { return n === 1 ? '1 item' : n + ' items'; }
+
+  /* ---------- Rendering ---------- */
+
+  function renderTabs() {
+    var total = totalNeeded();
+    var tabs = [{ id: 'items', label: 'All items', badge: '☰', plain: true },
+                { id: 'need', label: 'Need', badge: total }];
+    $('#tabs').innerHTML = tabs.map(function (t) {
+      var cls = t.plain ? 'badge plain' : ('badge' + (t.badge > 0 ? ' hot' : ''));
+      return '<button type="button" data-tab="' + t.id + '"' + (tab === t.id ? ' class="active" aria-current="page"' : '') + '>' +
+        '<span class="' + cls + '">' + t.badge + '</span>' + esc(t.label) + '</button>';
+    }).join('');
+  }
+
+  function render() {
+    if (tab !== 'items' && tab !== 'need') tab = 'items';
+    if (tab !== 'items') editing = false;
+
+    renderTabs();
+
+    var editBtn = $('#editBtn');
+    editBtn.hidden = tab !== 'items';
+    editBtn.textContent = editing ? 'Done' : 'Edit';
+    editBtn.classList.toggle('on', editing);
+
+    var main = $('#main');
+    if (tab === 'items') {
+      $('#title').textContent = 'All items';
+      $('#subtitle').textContent = editing ? 'Rename, reorder, add or delete' : countText(totalNeeded()) + ' needed';
+      main.innerHTML = renderItems();
+    } else {
+      var stores = state.stores;
+      var n = totalNeeded();
+      $('#title').textContent = 'Need';
+      $('#subtitle').textContent = n ? countText(n) + ' left' : 'Nothing left';
+      main.innerHTML = renderShop(stores, n);
+    }
+  }
+
+  function renderItems() {
+    return state.stores.map(function (s) {
+      var last = s.items.length - 1;
+      var rows = s.items.map(function (it, idx) {
+        var ids = ' data-s="' + s.id + '" data-i="' + it.id + '"';
+        var h = '<li class="row' + (it.qty > 0 && !editing ? ' need' : '') + '">';
+        if (editing) {
+          h += '<div class="order">' +
+            '<button type="button" data-act="up"' + ids + (idx === 0 ? ' disabled' : '') + ' aria-label="Move ' + esc(it.name) + ' up">▲</button>' +
+            '<button type="button" data-act="down"' + ids + (idx === last ? ' disabled' : '') + ' aria-label="Move ' + esc(it.name) + ' down">▼</button>' +
+            '</div>';
+        }
+        h += '<span class="name">' + esc(it.name) + '</span>';
+        if (editing) {
+          h += '<button type="button" class="ebtn" data-act="rename"' + ids + '>Rename</button>' +
+               '<button type="button" class="ebtn danger" data-act="del"' + ids + '>Delete</button>';
+        } else {
+          h += '<div class="stepper">' +
+            '<button type="button" data-act="dec"' + ids + (it.qty === 0 ? ' disabled' : '') + ' aria-label="One less ' + esc(it.name) + '">−</button>' +
+            '<span class="qty">x' + it.qty + '</span>' +
+            '<button type="button" data-act="inc"' + ids + ' aria-label="One more ' + esc(it.name) + '">+</button>' +
+            '</div>';
+        }
+        return h + '</li>';
+      }).join('');
+
+      return '<section class="store">' +
+        '<h2>' + esc(s.name) + '<span class="sub">' + needed(s.items).length + ' needed</span></h2>' +
+        (rows ? '<ul class="list">' + rows + '</ul>' : '') +
+        (editing ? '<button type="button" class="add" data-act="add" data-s="' + s.id + '">Add item to ' + esc(s.name) + '</button>' : '') +
+        '</section>';
+    }).join('');
+  }
+
+  function renderShop(stores, n) {
+    if (!n) {
+      return '<div class="empty"><p>Nothing needed here.</p>' +
+        '<button type="button" data-act="goitems">Go to all items</button></div>';
+    }
+    var grouped = true;
+    var html = stores.map(function (s) {
+      var list = needed(s.items);
+      if (!list.length) return '';
+      var rows = list.map(function (it) {
+        return '<li><button type="button" class="shop" data-act="got" data-s="' + s.id + '" data-i="' + it.id + '" aria-label="Got ' + esc(it.name) + '">' +
+          '<span class="qty">x' + it.qty + '</span>' +
+          '<span class="name">' + esc(it.name) + '</span>' +
+          '<span class="tick" aria-hidden="true"></span></button></li>';
+      }).join('');
+      return '<section class="store">' +
+        (grouped ? '<h2>' + esc(s.name) + '<span class="sub">' + countText(list.length) + '</span></h2>' : '') +
+        '<ul class="list">' + rows + '</ul></section>';
+    }).join('');
+    return html + '<p class="hint">Tap an item when it’s in the cart.</p>';
+  }
+
+  /* ---------- Toast ---------- */
+
+  function showToast(msg, undo) {
+    clearTimeout(toastTimer);
+    undoFn = undo;
+    $('#toastMsg').textContent = msg;
+    $('#toastUndo').hidden = !undo;
+    $('#toast').classList.add('show');
+    toastTimer = setTimeout(hideToast, undo ? 6000 : 2500);
+  }
+  function hideToast() { $('#toast').classList.remove('show'); undoFn = null; }
+
+  $('#toastUndo').addEventListener('click', function () {
+    if (undoFn) { undoFn(); save(); render(); }
+    hideToast();
+  });
+
+  /* ---------- Actions ---------- */
+
+  $('#main').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b) return;
+    var act = b.dataset.act;
+    if (act === 'goitems') { tab = 'items'; render(); window.scrollTo(0, 0); return; }
+
+    var s = findStore(b.dataset.s);
+    if (!s) return;
+    if (act === 'add') {
+      var name = prompt('New item for ' + s.name);
+      if (name && name.trim()) { s.items.push({ id: uid(), name: name.trim(), qty: 0 }); save(); render(); }
+      return;
+    }
+
+    var it = s.items.filter(function (x) { return x.id === b.dataset.i; })[0];
+    if (!it) return;
+    var idx = s.items.indexOf(it);
+
+    switch (act) {
+      case 'inc': it.qty = Math.min(99, it.qty + 1); break;
+      case 'dec': it.qty = Math.max(0, it.qty - 1); break;
+      case 'got':
+        var prev = it.qty;
+        it.qty = 0;
+        showToast('Got ' + it.name, function () { it.qty = prev; });
+        break;
+      case 'up':
+        if (idx > 0) { s.items.splice(idx, 1); s.items.splice(idx - 1, 0, it); }
+        break;
+      case 'down':
+        if (idx < s.items.length - 1) { s.items.splice(idx, 1); s.items.splice(idx + 1, 0, it); }
+        break;
+      case 'rename':
+        var nn = prompt('Rename item', it.name);
+        if (!nn || !nn.trim()) return;
+        it.name = nn.trim();
+        break;
+      case 'del':
+        if (!confirm('Delete ' + it.name + ' from ' + s.name + '?')) return;
+        s.items.splice(idx, 1);
+        showToast('Deleted ' + it.name, function () { s.items.splice(idx, 0, it); });
+        break;
+      default: return;
+    }
+    save();
+    render();
+  });
+
+  $('#tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tab]');
+    if (!b) return;
+    tab = b.dataset.tab;
+    render();
+    window.scrollTo(0, 0);
+  });
+
+  $('#editBtn').addEventListener('click', function () { editing = !editing; render(); });
+
+  /* ---------- Menu, copy, import ---------- */
+
+  function toText() {
+    return state.stores.map(function (s) {
+      return [s.name].concat(s.items.map(function (i) { return i.name + ' x' + i.qty; })).join('\n');
+    }).join('\n\n');
+  }
+
+  function parse(text) {
+    var stores = [], cur = null;
+    text.split(/\r?\n/).forEach(function (line) {
+      line = line.trim();
+      if (!line) return;
+      var m = line.match(/^(.+?)\s+[xX]\s*(\d+)$/);
+      if (m) {
+        if (!cur) { cur = { id: uid(), name: 'List', items: [] }; stores.push(cur); }
+        cur.items.push({ id: uid(), name: m[1].trim(), qty: Math.min(99, parseInt(m[2], 10)) });
+      } else {
+        cur = { id: uid(), name: line, items: [] };
+        stores.push(cur);
+      }
+    });
+    return stores.filter(function (s) { return s.items.length; });
+  }
+
+  var menu = $('#menu'), textDlg = $('#textDlg'), textMode = null;
+
+  $('#menuBtn').addEventListener('click', function () { menu.showModal(); });
+
+  function openText(mode) {
+    textMode = mode;
+    var ta = $('#textArea');
+    if (mode === 'copy') {
+      $('#textTitle').textContent = 'Copy list';
+      $('#textHelp').textContent = 'Couldn’t copy automatically. Select all of the text below and copy it.';
+      $('#textOk').textContent = 'Done';
+      ta.value = toText();
+      ta.readOnly = true;
+    } else {
+      $('#textTitle').textContent = 'Replace list from text';
+      $('#textHelp').textContent = 'Paste your list. A line on its own is a store name; each item line ends with x and a number. This replaces everything.';
+      $('#textOk').textContent = 'Replace list';
+      ta.value = '';
+      ta.readOnly = false;
+    }
+    textDlg.showModal();
+  }
+
+  menu.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-menu]');
+    if (!b) { if (e.target === menu) menu.close(); return; }
+    var what = b.dataset.menu;
+    menu.close();
+    if (what === 'copy') {
+      var t = toText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(function () { showToast('List copied', null); },
+                                             function () { openText('copy'); });
+      } else {
+        openText('copy');
+      }
+    } else if (what === 'import') {
+      openText('import');
+    } else if (what === 'reset') {
+      if (!confirm('Set every item to x0?')) return;
+      var snapshot = JSON.stringify(state);
+      state.stores.forEach(function (s) { s.items.forEach(function (i) { i.qty = 0; }); });
+      save(); render();
+      showToast('Every item set to x0', function () { state = JSON.parse(snapshot); });
+    }
+  });
+
+  $('#textCancel').addEventListener('click', function () { textDlg.close(); });
+  $('#textOk').addEventListener('click', function () {
+    if (textMode === 'import') {
+      var stores = parse($('#textArea').value);
+      if (!stores.length) {
+        $('#textHelp').textContent = 'No items found. Each item line must end with x and a number, like “Banana x3”.';
+        return;
+      }
+      var snapshot = JSON.stringify(state);
+      state = { stores: stores };
+      tab = 'items';
+      save(); render();
+      showToast('List replaced', function () { state = JSON.parse(snapshot); });
+    }
+    textDlg.close();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

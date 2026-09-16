@@ -1,0 +1,12 @@
+{
+  "name": "Groceries",
+  "short_name": "Groceries",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a1929",
+  "theme_color": "#0a1929",
+  "icons": [
+    { "src": "icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
