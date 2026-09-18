@@ -26,8 +26,13 @@
     --tabbar: 64px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; background: var(--bg); color: var(--text); }
-  html { height: 100%; }
+  html, body { margin: 0; color: var(--text); }
+  /* html's background paints the whole screen canvas. iOS home-screen mode
+     can report a viewport shorter than the screen, leaving a strip below the
+     tab bar; painting the canvas in the bar's color means that strip reads as
+     part of the bar instead of page background. */
+  html { height: 100%; background: var(--surface); }
+  body { background: var(--bg); }
   /* App shell: one fixed-height column. The header and tab bar are flex
      children that never move; only <main> scrolls. 100dvh tracks Safari's
      collapsing toolbar; 100vh is the fallback for older WebKit. */
